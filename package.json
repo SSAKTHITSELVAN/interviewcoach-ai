@@ -1,0 +1,96 @@
+{
+  "name": "interviewcouch",
+  "version": "1.0.0",
+  "description": "Fully Offline AI Interview Coach",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "setup": "node scripts/setup.js",
+    "download": "node scripts/setup.js",
+    "build": "node scripts/build.js",
+    "build:portable": "node scripts/build.js --portable",
+    "build:dir": "electron-builder --win --dir",
+    "download:electron": "node scripts/download-electron.js",
+    "fix:winsign": "node scripts/fix-winsign.js"
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0",
+    "pdf-parse": "^1.1.1",
+    "say": "^0.16.0"
+  },
+  "devDependencies": {
+    "electron": "^29.4.6",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.interviewcouch.desktop",
+    "productName": "InterviewCouch",
+    "copyright": "Copyright \u00a9 2025 InterviewCouch",
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/pdf-parse/**/*",
+      "node_modules/say/**/*"
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "node_modules/**/*",
+      "!node_modules/.cache/**/*",
+      "!**/*.map",
+      "!**/README*",
+      "!**/CHANGELOG*",
+      "!**/LICENSE*",
+      "!**/*.md"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/",
+        "to": "resources/",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "models/",
+        "to": "models/",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "InterviewCouch",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "artifactName": "InterviewCouch-Setup-${version}.${ext}",
+      "deleteAppDataOnUninstall": false
+    },
+    "portable": {
+      "artifactName": "InterviewCouch-Portable-${version}.${ext}"
+    }
+  },
+  "author": "InterviewCouch"
+}

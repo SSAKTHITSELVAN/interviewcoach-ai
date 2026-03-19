@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Settings — InterviewCouch</title>
+  <link rel="stylesheet" href="../css/app.css">
+  <style>body{overflow:auto}</style>
+</head>
+<body class="page fade-in">
+
+  <div class="titlebar">
+    <div class="tb-brand"><div class="tb-dot"></div>InterviewCouch</div>
+    <div class="tb-controls">
+      <button class="tb-btn" onclick="window.api.window.minimize()">—</button>
+      <button class="tb-btn" onclick="window.api.window.maximize()">⤢</button>
+      <button class="tb-btn close" onclick="window.api.window.close()">✕</button>
+    </div>
+  </div>
+
+  <main style="flex:1;overflow-y:auto">
+    <div style="max-width:680px;margin:0 auto;padding:32px">
+
+      <div class="flex items-center gap-16" style="margin-bottom:32px">
+        <button class="btn btn-ghost btn-sm" onclick="window.api.navigate('home')">← Back</button>
+        <div>
+          <h2 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Settings</h2>
+          <p class="text-sm muted">Preferences & model info</p>
+        </div>
+      </div>
+
+      <!-- AI Model info -->
+      <div class="card" style="margin-bottom:14px">
+        <h4 style="margin-bottom:16px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t2)">AI Model</h4>
+        <div class="flex items-center justify-between">
+          <div>
+            <div style="font-size:14px;font-weight:500" id="modelName">Checking…</div>
+            <div class="text-sm muted" style="margin-top:4px">Llama 3.2 • GGUF Q4_K_M • CPU/GPU</div>
+          </div>
+          <div class="badge" id="modelBadge" style="background:var(--s3);color:var(--t2)">—</div>
+        </div>
+        <div class="hr" style="margin:16px 0"></div>
+        <p class="text-sm muted">To upgrade the AI model, place a new <span style="font-family:var(--mono);font-size:12px;background:var(--s3);padding:2px 6px;border-radius:4px">model.gguf</span> file in <span style="font-family:var(--mono);font-size:12px;background:var(--s3);padding:2px 6px;border-radius:4px">models/llm/</span> and restart the app.</p>
+      </div>
+
+      <!-- Speech -->
+      <div class="card" style="margin-bottom:14px">
+        <h4 style="margin-bottom:16px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t2)">Voice & Speech</h4>
+        <div class="grid-2" style="gap:14px">
+          <div class="form-group">
+            <label class="form-label">TTS Engine</label>
+            <select class="form-select" id="ttsVoice">
+              <option value="default">Windows SAPI (Default)</option>
+            </select>
+            <p class="form-hint">More voices available in Windows Settings → Speech</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">STT Model</label>
+            <select class="form-select">
+              <option>Whisper Tiny (fast, offline)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="card" style="margin-bottom:14px">
+        <h4 style="margin-bottom:16px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t2)">Session Stats</h4>
+        <div class="grid-4" style="text-align:center">
+          <div><div style="font-size:22px;font-weight:700" id="sTotal">0</div><div class="text-xs muted" style="margin-top:4px">Total</div></div>
+          <div><div style="font-size:22px;font-weight:700" id="sBest">—</div><div class="text-xs muted" style="margin-top:4px">Best Score</div></div>
+          <div><div style="font-size:22px;font-weight:700" id="sAvg">—</div><div class="text-xs muted" style="margin-top:4px">Avg Score</div></div>
+          <div><div style="font-size:22px;font-weight:700" id="sLast">—</div><div class="text-xs muted" style="margin-top:4px">Last Session</div></div>
+        </div>
+        <div class="hr" style="margin:16px 0"></div>
+        <button class="btn btn-outline btn-sm" onclick="clearStats()">Reset Stats</button>
+      </div>
+
+      <!-- About -->
+      <div class="card">
+        <h4 style="margin-bottom:12px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t2)">About</h4>
+        <div class="flex justify-between text-sm" style="padding:4px 0;border-bottom:1px solid var(--border)">
+          <span class="muted">App</span><span>InterviewCouch</span>
+        </div>
+        <div class="flex justify-between text-sm" style="padding:4px 0;border-bottom:1px solid var(--border)">
+          <span class="muted">Version</span><span>1.0.0</span>
+        </div>
+        <div class="flex justify-between text-sm" style="padding:4px 0;border-bottom:1px solid var(--border)">
+          <span class="muted">Platform</span><span>Windows · Electron 29</span>
+        </div>
+        <div class="flex justify-between text-sm" style="padding:4px 0">
+          <span class="muted">Network</span><span style="color:var(--green)">Fully Offline ✓</span>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="toast-root"></div>
+
+  <script>
+    async function init() {
+      const ready = await window.api.llm.isReady();
+      document.getElementById('modelName').textContent =
+        ready ? 'Llama 3.2-1B Instruct (Q4_K_M)' : 'Model not loaded';
+      const badge = document.getElementById('modelBadge');
+      badge.textContent = ready ? '● Online' : '● Offline';
+      badge.style.color = ready ? 'var(--green)' : 'var(--red)';
+
+      const stats = await window.api.store.get('stats') || {};
+      document.getElementById('sTotal').textContent = stats.total || 0;
+      document.getElementById('sBest').textContent = stats.bestScore ? stats.bestScore + '/10' : '—';
+      document.getElementById('sAvg').textContent = stats.avgScore ? stats.avgScore.toFixed(1) : '—';
+      if (stats.lastTimestamp) {
+        const d = new Date(stats.lastTimestamp);
+        document.getElementById('sLast').textContent =
+          d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }
+    }
+
+    async function clearStats() {
+      if (!confirm('Reset all stats?')) return;
+      await window.api.store.del('stats');
+      await window.api.store.del('lastFeedback');
+      toast('Stats cleared');
+      init();
+    }
+
+    function toast(msg) {
+      const el = document.createElement('div');
+      el.className = 'toast'; el.textContent = msg;
+      document.getElementById('toast-root').appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    init();
+  </script>
+</body>
+</html>

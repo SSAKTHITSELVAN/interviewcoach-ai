@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Interview — InterviewCouch</title>
+  <link rel="stylesheet" href="../css/app.css">
+  <style>
+    body{overflow:hidden}
+    .session-layout{
+      display:flex;flex:1;overflow:hidden;
+    }
+
+    /* ── Left panel: AI avatar + controls ── */
+    .ai-panel{
+      width:320px;flex-shrink:0;
+      border-right:1px solid var(--border);
+      display:flex;flex-direction:column;
+      padding:24px 20px;gap:20px;
+    }
+    .ai-avatar{
+      background:var(--s1);border:1px solid var(--border);
+      border-radius:var(--r-xl);padding:28px 20px;
+      text-align:center;
+    }
+    .ai-face{
+      width:72px;height:72px;
+      background:var(--s2);border:1px solid var(--border);
+      border-radius:50%;margin:0 auto 16px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:28px;
+      transition:box-shadow .3s ease;
+    }
+    .ai-face.speaking{
+      box-shadow:0 0 0 3px var(--t1),0 0 0 6px rgba(255,255,255,.1);
+    }
+    .ai-name{font-weight:700;font-size:16px;margin-bottom:3px}
+    .ai-title{font-size:12px;color:var(--t2);margin-bottom:14px}
+
+    .status-pill{
+      display:inline-flex;align-items:center;gap:6px;
+      background:var(--s2);border:1px solid var(--border);
+      border-radius:100px;padding:5px 12px;
+      font-size:12px;color:var(--t2);
+    }
+
+    .progress-section{margin-top:4px}
+    .progress-header{
+      display:flex;justify-content:space-between;
+      font-size:12px;color:var(--t2);margin-bottom:8px;
+    }
+    .prog-track{background:var(--s3);border-radius:100px;height:3px;overflow:hidden}
+    .prog-fill{background:var(--t1);height:100%;border-radius:100px;transition:width .5s ease}
+
+    .q-count{
+      font-size:11px;color:var(--t3);
+      display:flex;justify-content:center;margin-top:4px;
+    }
+
+    /* Mic button */
+    .mic-section{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:auto}
+    .mic-btn{
+      width:72px;height:72px;border-radius:50%;
+      background:var(--s2);border:1.5px solid var(--border);
+      font-size:28px;display:flex;align-items:center;justify-content:center;
+      cursor:pointer;transition:all .2s ease;
+    }
+    .mic-btn:hover:not(:disabled){background:var(--s3);border-color:var(--bh)}
+    .mic-btn.recording{
+      background:rgba(239,68,68,.15);
+      border-color:var(--red);
+      box-shadow:0 0 0 4px rgba(239,68,68,.12);
+      animation:pulse .8s ease-in-out infinite;
+    }
+    .mic-btn:disabled{opacity:.3;cursor:not-allowed}
+    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+    .mic-label{font-size:12px;color:var(--t2);text-align:center}
+
+    .ctrl-row{display:flex;gap:8px;width:100%;justify-content:center;margin-top:4px}
+
+    /* ── Right panel: transcript ── */
+    .transcript-panel{
+      flex:1;display:flex;flex-direction:column;overflow:hidden;
+    }
+    .transcript-header{
+      padding:16px 24px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;
+      flex-shrink:0;
+    }
+    .transcript-feed{
+      flex:1;overflow-y:auto;
+      padding:20px 24px;
+      display:flex;flex-direction:column;gap:16px;
+    }
+
+    .msg{display:flex;gap:12px;animation:fadeUp .25s ease forwards;max-width:95%}
+    .msg.user{flex-direction:row-reverse;align-self:flex-end}
+
+    .msg-avatar{
+      width:32px;height:32px;border-radius:50%;
+      background:var(--s2);border:1px solid var(--border);
+      font-size:13px;display:flex;align-items:center;justify-content:center;
+      flex-shrink:0;margin-top:2px;
+    }
+    .msg.user .msg-avatar{background:var(--s3)}
+
+    .msg-bubble{
+      background:var(--s1);border:1px solid var(--border);
+      border-radius:12px;padding:12px 16px;
+      font-size:14px;line-height:1.6;
+      max-width:460px;
+    }
+    .msg.user .msg-bubble{
+      background:var(--s2);
+      border-color:var(--bh);
+    }
+    .msg-time{font-size:10px;color:var(--t3);margin-top:5px;padding:0 4px}
+
+    /* typing indicator */
+    .typing-indicator{
+      display:flex;align-items:center;gap:5px;
+      padding:12px 16px;background:var(--s1);
+      border:1px solid var(--border);border-radius:12px;
+    }
+    .typing-dot{
+      width:6px;height:6px;border-radius:50%;background:var(--t2);
+      animation:tdot 1.2s ease-in-out infinite;
+    }
+    .typing-dot:nth-child(2){animation-delay:.2s}
+    .typing-dot:nth-child(3){animation-delay:.4s}
+    @keyframes tdot{0%,80%,100%{transform:scale(.7);opacity:.4}40%{transform:scale(1);opacity:1}}
+
+    /* live transcription bar */
+    .live-bar{
+      padding:12px 24px;
+      border-top:1px solid var(--border);
+      background:var(--s1);
+      flex-shrink:0;min-height:46px;
+      display:flex;align-items:center;gap:10px;
+    }
+    .live-text{font-size:13px;color:var(--t2);font-style:italic;flex:1}
+    .live-dot{width:6px;height:6px;border-radius:50%;background:var(--red);
+      animation:blink .7s ease-in-out infinite;flex-shrink:0;display:none}
+  </style>
+</head>
+<body class="page fade-in">
+
+  <!-- Titlebar -->
+  <div class="titlebar">
+    <div class="tb-brand"><div class="tb-dot"></div>InterviewCouch</div>
+    <div class="tb-controls">
+      <button class="tb-btn" onclick="window.api.window.minimize()">—</button>
+      <button class="tb-btn" onclick="window.api.window.maximize()">⤢</button>
+      <button class="tb-btn close" onclick="confirmEnd()">✕</button>
+    </div>
+  </div>
+
+  <div class="session-layout">
+
+    <!-- ── Left: AI panel ── -->
+    <div class="ai-panel">
+
+      <div class="ai-avatar">
+        <div class="ai-face" id="aiFace">🤵</div>
+        <div class="ai-name">Alex</div>
+        <div class="ai-title">Senior Technical Interviewer</div>
+        <div class="waveform idle" id="waveform">
+          <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
+          <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
+          <div class="wbar"></div><div class="wbar"></div>
+        </div>
+        <div class="status-pill" style="margin-top:12px">
+          <span class="dot" id="statusDot" style="background:var(--t3)"></span>
+          <span id="statusText">Initialising…</span>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-section">
+        <div class="progress-header">
+          <span>Interview Progress</span>
+          <span id="progLabel">0 / 10</span>
+        </div>
+        <div class="prog-track">
+          <div class="prog-fill" id="progFill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Role chip -->
+      <div style="display:flex;justify-content:center">
+        <div class="badge badge-muted" id="roleChip">Loading…</div>
+      </div>
+
+      <!-- Mic section -->
+      <div class="mic-section">
+        <button class="mic-btn" id="micBtn" onclick="toggleMic()" disabled>🎙️</button>
+        <div class="mic-label" id="micLabel">Waiting for AI…</div>
+        <div class="ctrl-row">
+          <button class="btn btn-sm btn-outline" onclick="skipTurn()">Skip</button>
+          <button class="btn btn-sm btn-danger" onclick="confirmEnd()">End</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Right: Transcript ── -->
+    <div class="transcript-panel">
+      <div class="transcript-header">
+        <span class="text-sm muted">Live Transcript</span>
+        <div id="sessionTimer" class="mono text-sm muted">00:00</div>
+      </div>
+
+      <div class="transcript-feed" id="feed">
+        <!-- Messages injected here -->
+      </div>
+
+      <!-- Live transcription bar (shows while user is speaking) -->
+      <div class="live-bar" id="liveBar">
+        <div class="live-dot" id="liveDot"></div>
+        <span class="live-text" id="liveText">Speak after the AI finishes…</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="toast-root"></div>
+
+  <script src="../js/session.js"></script>
+</body>
+</html>
